@@ -1,12 +1,12 @@
 import torch
 from torch import nn
-from vocabs.vocab import Vocab
+from vocabs.viword_vocab import ViWordVocab 
 from builders.model_builder import META_ARCHITECTURE
 
 
 @META_ARCHITECTURE.register()
 class TransformerModel(nn.Module):
-    def __init__(self, config, vocab: Vocab):
+    def __init__(self, config, vocab: ViWordVocab):
         super().__init__()
 
         self.src_pad_idx = vocab.pad_idx
