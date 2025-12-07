@@ -56,6 +56,7 @@ class TextSumTask(BaseTask):
         self.model.train()
 
         running_loss = .0
+        batch_losses = []
         with tqdm(desc='Epoch %d - Training' % (self.epoch+1), unit='it', total=len(self.train_dataloader)) as pbar:
             for it, items in enumerate(self.train_dataloader):
                 items = items.to(self.device)
@@ -70,12 +71,51 @@ class TextSumTask(BaseTask):
                 self.optim.zero_grad()
                 loss.backward()
                 self.optim.step()
-                running_loss += loss.item()
+                loss_val = loss.item()
+                running_loss += loss_val
+                batch_losses.append(loss_val)
 
                 # update the training status
                 pbar.set_postfix(loss=running_loss / (it + 1))
                 pbar.update()
                 self.scheduler.step()
+        mean_loss = running_loss / len(self.train_dataloader)
+        self.train_loss.append(mean_loss)
+        self.train_batch_losses.append(batch_losses)
+        return running_loss / len(self.train_dataloader)
+
+
+    def compute_oov_rate(self, gens: dict, gts: dict):
+        """
+        Tính tỷ lệ OOV cho prediction và ground-truth.
+        """
+        vocab = self.vocab
+        total_gt = 0
+        oov_gt = 0
+        total_gen = 0
+        oov_gen = 0
+
+        for id in gts:
+            # split đơn giản theo space
+            gt_tokens = gts[id].split()
+            gen_tokens = gens[id].split()
+
+            # Ground-truth
+            for tok in gt_tokens:
+                total_gt += 1
+                if tok not in vocab.stoi:  # hoặc vocab.token2id
+                    oov_gt += 1
+
+            # Prediction
+            for tok in gen_tokens:
+                total_gen += 1
+                if tok not in vocab.stoi:
+                    oov_gen += 1
+
+        return {
+            "gt_oov_rate": oov_gt / total_gt if total_gt > 0 else 0.0,
+            "gen_oov_rate": oov_gen / total_gen if total_gen > 0 else 0.0,
+        }
 
     def evaluate_metrics(self, dataloader: DataLoader) -> dict:
         self.model.eval()
@@ -101,7 +141,10 @@ class TextSumTask(BaseTask):
         # Calculate metrics
         self.logger.info("Getting scores")
         scores = evaluation.compute_scores(gts, gens)
-    
+        # Add OOV
+        oov_scores = self.compute_oov_rate(gens, gts)
+        scores.update(oov_scores)  
+
         return scores, (gens, gts)
 
     def get_predictions(self):

@@ -18,6 +18,8 @@ class TransformerModel(nn.Module):
         self.device = config.device
         self.config = config
         self.vocab = vocab
+        self.vocab_size = len(vocab)
+        print(f"Vocab size: {self.vocab_size}")
 
         # Embedding
         self.src_embedding = nn.Embedding(vocab.vocab_size, config.d_model, padding_idx=self.src_pad_idx)
