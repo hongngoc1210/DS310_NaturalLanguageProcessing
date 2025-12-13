@@ -20,8 +20,8 @@ dataset:
   test: 
     type: TextSumDataset
     path: datasets/Wikilingual-dataset/test.json
-  batch_size: 16
-  num_workers: 8
+  batch_size: 4
+  num_workers: 4
 
 model:
   name: Pointer_Generator_Wikilingual
