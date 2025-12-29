@@ -1,5 +1,5 @@
 vocab:
-  type: Vocab
+  type: ViSegmentVocab
   path:
     train: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/train.json
     dev: /kaggle/input/mynlpdataset/datasets/Wikilingual-dataset/dev.json
